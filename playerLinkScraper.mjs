@@ -23,25 +23,8 @@ async function scrapeWebsite(url) {
       return match ? match[1] : null;
     }).filter(link => link !== null);
     
-    // console.log("Players:", playerLinks);
+    return playerLinks;
   } 
-  catch (error) {
-    console.error("Error scraping website:", scrapeData.error);
-  }
-}
-
-async function scrapePlayer(url) {
-  try {
-    const scrapeData = await client.scrape.startAndWait({
-      url: url,
-      scrapeOptions: {
-        formats: ["html"],
-        includeTags: [".mod-agent"]
-      },
-    })
-    
-    console.log("Players:", playerLinks);
-  }
   catch (error) {
     console.error("Error scraping website:", scrapeData.error);
   }
@@ -49,7 +32,7 @@ async function scrapePlayer(url) {
 
 const playerLinks = await scrapeWebsite("https://www.vlr.gg/event/2977/vct-2026-americas-stage-2/group-stage");
 
-
+export { scrapeWebsite };
 /*
 node teamscraper.mjs
 */
