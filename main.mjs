@@ -4,39 +4,33 @@ import { scrapeWebsite } from './scripts/player-link-scraper.mjs';
 import scrapePlayer from './scripts/player-info-scraper.mjs';
 import { savePlayer, saveEvent, addPlayerToEvent } from './scripts/db.mjs';
 
-const prompt = promptSync();
+const [link, year, eventName] = process.argv.slice(2);
 
-const eventType = prompt('Is this a tournament or a stage? ').trim().toLowerCase();
-
-let eventName;
-let year = null;
-let stage = null;
-
-if (eventType === 'stage') {
-  year = prompt('Enter the year: ');
-  stage = prompt('Enter the stage number: ');
-  eventName = `${year} Stage ${stage}`;
-  year = parseInt(year, 10);
-  stage = parseInt(stage, 10);
-} else {
-  eventName = prompt('Enter the tournament name: ');
+if (!link || !year || !eventName) {
+  console.error('Usage: valstats <link> <year> <event-name>');
+  process.exit(1);
 }
 
-const eventUrl = prompt('Enter the event URL: ');
-const region = prompt('Enter the region: ');
+const isStage = eventName.toLowerCase().includes('stage');
+
+let region = null;
+if (isStage) {
+  const prompt = promptSync();
+  region = prompt('Enter the region: ');
+}
 
 const eventId = saveEvent({
   name: eventName,
-  url: eventUrl,
+  url: link,
   region,
-  year,
-  stage,
+  year: parseInt(year, 10),
+  stage: null,
 });
 
-const links = await scrapeWebsite(eventUrl, region);
+const links = await scrapeWebsite(link);
 
-for (const link of links) {
-  const player = await scrapePlayer(link, region);
+for (const playerLink of links) {
+  const player = await scrapePlayer(playerLink, region);
   if (player) {
     savePlayer(player);
     addPlayerToEvent(eventId, player.name);

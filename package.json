@@ -16,7 +16,7 @@
   "main": "./index.mjs",
   "exports": "./index.mjs",
   "bin": {
-    "vlr-stats-scraper": "./main.mjs"
+    "valstats": "./main.mjs"
   },
   "files": [
     "index.mjs",

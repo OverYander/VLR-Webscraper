@@ -21,17 +21,19 @@ HYPERBROWSER_API_KEY=your_key_here
 ## CLI usage
 
 ```bash
-npx vlr-stats-scraper
+npx valstats <link> <year> <event-name>
 ```
 
-You'll be prompted for:
-- Whether this is a `tournament` or a `stage` (stages ask for year + stage number and
-  build a name like `2026 Stage 2`; anything else asks for a free-text tournament name)
-- The event URL (a vlr.gg event/group-stage page)
-- The region
+```bash
+npx valstats https://www.vlr.gg/event/2977/vct-2026-americas-stage-2/group-stage 2026 "Stage 2"
+```
+
+- `link` — the vlr.gg event/group-stage page to scrape.
+- `year` — the year the event took place.
+- `event-name` — a label for this tournament/stage (used to group players together later).
 
 Each player on that event page gets scraped and saved to `players.db` in your current
-directory, linked to that tournament/stage.
+directory, linked to that event name.
 
 ## Library usage
 
