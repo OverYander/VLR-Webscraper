@@ -27,7 +27,7 @@ async function scrapePlayer(url, region) {
       past_teams: getPastTeam($),
       winnings: getWinnings($),
       most_played_agents: agentsPlayed.map(data => data.Agent),
-      avg_kd: agentsPlayed.reduce((acc, data) => acc + (parseFloat(data['K:D'])) / agentsPlayed.length, 0),
+      avg_kda: agentsPlayed.reduce((acc, data) => acc + (parseFloat(data['K:D'])) / agentsPlayed.length, 0),
       nationality: getNationality($),
       region: region,
       stats: agentsPlayed

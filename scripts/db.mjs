@@ -12,7 +12,7 @@ db.exec(`
     past_teams TEXT,
     winnings TEXT,
     most_played_agents TEXT,
-    avg_kd REAL,
+    avg_kda REAL,
     nationality TEXT,
     region TEXT,
     stats TEXT
@@ -20,22 +20,22 @@ db.exec(`
 `);
 
 const existingColumns = db.prepare('PRAGMA table_info(players)').all().map(col => col.name);
-if (existingColumns.includes('avg_kda') && !existingColumns.includes('avg_kd')) {
-  db.exec('ALTER TABLE players RENAME COLUMN avg_kda TO avg_kd');
+if (existingColumns.includes('avg_kd') && !existingColumns.includes('avg_kda')) {
+  db.exec('ALTER TABLE players RENAME COLUMN avg_kd TO avg_kda');
 }
 if (!existingColumns.includes('stats')) {
   db.exec('ALTER TABLE players ADD COLUMN stats TEXT');
 }
 
 const upsertStmt = db.prepare(`
-  INSERT INTO players (name, team, past_teams, winnings, most_played_agents, avg_kd, nationality, region, stats)
-  VALUES (@name, @team, @past_teams, @winnings, @most_played_agents, @avg_kd, @nationality, @region, @stats)
+  INSERT INTO players (name, team, past_teams, winnings, most_played_agents, avg_kda, nationality, region, stats)
+  VALUES (@name, @team, @past_teams, @winnings, @most_played_agents, @avg_kda, @nationality, @region, @stats)
   ON CONFLICT(name) DO UPDATE SET
     team = excluded.team,
     past_teams = excluded.past_teams,
     winnings = excluded.winnings,
     most_played_agents = excluded.most_played_agents,
-    avg_kd = excluded.avg_kd,
+    avg_kda = excluded.avg_kda,
     nationality = excluded.nationality,
     region = excluded.region,
     stats = excluded.stats
