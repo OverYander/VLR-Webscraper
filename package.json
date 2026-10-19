@@ -1,7 +1,7 @@
 {
-  "name": "vlr-webscraper",
+  "name": "vlr-stats-scraper",
   "version": "1.0.0",
-  "description": "",
+  "description": "Scrapes player stats from vlr.gg and stores them in a local SQLite database, grouped by tournament or stage.",
   "homepage": "https://github.com/OverYander/VLR-Webscraper#readme",
   "bugs": {
     "url": "https://github.com/OverYander/VLR-Webscraper/issues"
@@ -11,9 +11,31 @@
     "url": "git+https://github.com/OverYander/VLR-Webscraper.git"
   },
   "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "author": "OverYander <gavinchen8706@gmail.com>",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": "./index.mjs",
+  "bin": {
+    "vlr-stats-scraper": "./main.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "main.mjs",
+    "scripts/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "vlr",
+    "valorant",
+    "esports",
+    "scraper",
+    "sqlite",
+    "stats"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

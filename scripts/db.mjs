@@ -1,9 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const db = new Database(path.join(__dirname, '..', 'players.db'));
+const db = new Database(path.join(process.cwd(), 'players.db'));
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS players (
@@ -19,15 +17,48 @@ db.exec(`
   )
 `);
 
-const existingColumns = db.prepare('PRAGMA table_info(players)').all().map(col => col.name);
-if (existingColumns.includes('avg_kd') && !existingColumns.includes('avg_kda')) {
-  db.exec('ALTER TABLE players RENAME COLUMN avg_kd TO avg_kda');
-}
-if (!existingColumns.includes('stats')) {
+const existingPlayerColumns = db.prepare('PRAGMA table_info(players)').all().map(col => col.name);
+if (!existingPlayerColumns.includes('stats')) {
   db.exec('ALTER TABLE players ADD COLUMN stats TEXT');
 }
 
-const upsertStmt = db.prepare(`
+const existingTableNames = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name);
+if (existingTableNames.includes('tournaments') && !existingTableNames.includes('events')) {
+  db.exec('ALTER TABLE tournaments RENAME TO events');
+}
+if (existingTableNames.includes('tournament_players') && !existingTableNames.includes('event_players')) {
+  db.exec('ALTER TABLE tournament_players RENAME TO event_players');
+  db.exec('ALTER TABLE event_players RENAME COLUMN tournament_id TO event_id');
+}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    url TEXT,
+    region TEXT,
+    year INTEGER,
+    stage INTEGER
+  )
+`);
+
+const existingEventColumns = db.prepare('PRAGMA table_info(events)').all().map(col => col.name);
+if (!existingEventColumns.includes('year')) {
+  db.exec('ALTER TABLE events ADD COLUMN year INTEGER');
+}
+if (!existingEventColumns.includes('stage')) {
+  db.exec('ALTER TABLE events ADD COLUMN stage INTEGER');
+}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS event_players (
+    event_id INTEGER NOT NULL REFERENCES events(id),
+    player_name TEXT NOT NULL REFERENCES players(name),
+    PRIMARY KEY (event_id, player_name)
+  )
+`);
+
+const upsertPlayerStmt = db.prepare(`
   INSERT INTO players (name, team, past_teams, winnings, most_played_agents, avg_kda, nationality, region, stats)
   VALUES (@name, @team, @past_teams, @winnings, @most_played_agents, @avg_kda, @nationality, @region, @stats)
   ON CONFLICT(name) DO UPDATE SET
@@ -41,6 +72,21 @@ const upsertStmt = db.prepare(`
     stats = excluded.stats
 `);
 
+const upsertEventStmt = db.prepare(`
+  INSERT INTO events (name, url, region, year, stage)
+  VALUES (@name, @url, @region, @year, @stage)
+  ON CONFLICT(name) DO UPDATE SET
+    url = excluded.url,
+    region = excluded.region,
+    year = excluded.year,
+    stage = excluded.stage
+`);
+
+const linkPlayerToEventStmt = db.prepare(`
+  INSERT OR IGNORE INTO event_players (event_id, player_name)
+  VALUES (@eventId, @playerName)
+`);
+
 function rowToPlayer(row) {
   if (!row) return null;
   return {
@@ -52,7 +98,7 @@ function rowToPlayer(row) {
 }
 
 function savePlayer(player) {
-  upsertStmt.run({
+  upsertPlayerStmt.run({
     ...player,
     past_teams: JSON.stringify(player.past_teams),
     most_played_agents: JSON.stringify(player.most_played_agents),
@@ -72,4 +118,58 @@ function getRandomPlayer() {
   return rowToPlayer(db.prepare('SELECT * FROM players ORDER BY RANDOM() LIMIT 1').get());
 }
 
-export { savePlayer, getPlayer, getAllPlayers, getRandomPlayer };
+// Creates the event (tournament, stage, etc.) if it doesn't exist yet, and returns its id either way.
+function saveEvent({ name, url, region, year, stage }) {
+  upsertEventStmt.run({
+    name,
+    url: url ?? null,
+    region: region ?? null,
+    year: year ?? null,
+    stage: stage ?? null,
+  });
+  return db.prepare('SELECT id FROM events WHERE name = ?').get(name).id;
+}
+
+function addPlayerToEvent(eventId, playerName) {
+  linkPlayerToEventStmt.run({ eventId, playerName });
+}
+
+function getEvents() {
+  return db.prepare('SELECT * FROM events').all();
+}
+
+function getEventByName(name) {
+  return db.prepare('SELECT * FROM events WHERE name = ?').get(name);
+}
+
+function getPlayersByEvent(eventName) {
+  return db.prepare(`
+    SELECT players.* FROM players
+    JOIN event_players ON event_players.player_name = players.name
+    JOIN events ON events.id = event_players.event_id
+    WHERE events.name = ?
+  `).all(eventName).map(rowToPlayer);
+}
+
+function getRandomPlayerFromEvent(eventName) {
+  return rowToPlayer(db.prepare(`
+    SELECT players.* FROM players
+    JOIN event_players ON event_players.player_name = players.name
+    JOIN events ON events.id = event_players.event_id
+    WHERE events.name = ?
+    ORDER BY RANDOM() LIMIT 1
+  `).get(eventName));
+}
+
+export {
+  savePlayer,
+  getPlayer,
+  getAllPlayers,
+  getRandomPlayer,
+  saveEvent,
+  addPlayerToEvent,
+  getEvents,
+  getEventByName,
+  getPlayersByEvent,
+  getRandomPlayerFromEvent,
+};
