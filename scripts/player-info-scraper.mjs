@@ -4,14 +4,20 @@ import { config } from "dotenv";
 
 config();
 
-const client = new Hyperbrowser({
-  apiKey: process.env.HYPERBROWSER_API_KEY,
-})
+let client;
+function getClient() {
+  if (!client) {
+    client = new Hyperbrowser({
+      apiKey: process.env.HYPERBROWSER_API_KEY,
+    })
+  }
+  return client;
+}
 
 async function scrapePlayer(url, region) {
   console.log('scrapePlayer ran')
   try {
-    const scrapeData = await client.scrape.startAndWait({
+    const scrapeData = await getClient().scrape.startAndWait({
       url: url,
       scrapeOptions: {
         formats: ["html"]
