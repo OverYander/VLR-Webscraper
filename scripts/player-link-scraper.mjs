@@ -26,11 +26,9 @@ async function scrapeWebsite(url) {
     return playerLinks;
   } 
   catch (error) {
-    console.error("Error scraping website:", scrapeData.error);
+    console.error("Error scraping website:", error);
   }
 }
-
-const playerLinks = await scrapeWebsite("https://www.vlr.gg/event/2977/vct-2026-americas-stage-2/group-stage");
 
 export { scrapeWebsite };
 /*
