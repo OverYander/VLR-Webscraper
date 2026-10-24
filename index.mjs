@@ -11,4 +11,7 @@ export {
   getEventByName,
   getPlayersByEvent,
   getRandomPlayerFromEvent,
+  emptyEvent,
+  clearEvent,
+  clearDatabase,
 } from './scripts/db.mjs';

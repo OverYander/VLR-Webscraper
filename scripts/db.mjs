@@ -161,6 +161,33 @@ function getRandomPlayerFromEvent(eventName) {
   `).get(eventName));
 }
 
+// Deletes players that no longer belong to any event.
+function deleteOrphanedPlayers() {
+  db.prepare('DELETE FROM players WHERE name NOT IN (SELECT player_name FROM event_players)').run();
+}
+
+// Removes every player from an event but keeps the event itself, so it can be re-scraped.
+// Players that are still in other events are kept.
+const emptyEvent = db.transaction((eventName) => {
+  const event = getEventByName(eventName);
+  if (!event) return false;
+  db.prepare('DELETE FROM event_players WHERE event_id = ?').run(event.id);
+  deleteOrphanedPlayers();
+  return true;
+});
+
+// Removes an event and its players. Players that are still in other events are kept.
+const clearEvent = db.transaction((eventName) => {
+  if (!emptyEvent(eventName)) return false;
+  db.prepare('DELETE FROM events WHERE name = ?').run(eventName);
+  return true;
+});
+
+// Wipes every event and player from the database.
+const clearDatabase = db.transaction(() => {
+  db.exec('DELETE FROM event_players; DELETE FROM events; DELETE FROM players;');
+});
+
 export {
   savePlayer,
   getPlayer,
@@ -172,4 +199,7 @@ export {
   getEventByName,
   getPlayersByEvent,
   getRandomPlayerFromEvent,
+  emptyEvent,
+  clearEvent,
+  clearDatabase,
 };

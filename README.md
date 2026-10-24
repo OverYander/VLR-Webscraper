@@ -34,6 +34,18 @@ npx valstats https://www.vlr.gg/event/2977/vct-2026-americas-stage-2/group-stage
 Each player on that event page gets scraped and saved to `players.db` in your current
 directory, linked to that event name.
 
+Running it again with an event name and year that are already saved replaces that event's
+players with the freshly scraped ones.
+
+### Clearing data
+
+```bash
+npx valstats --clear-event "Stage 2"   # remove one event and its players
+npx valstats --clear                   # wipe the whole database (asks for confirmation)
+```
+
+Players that also belong to another event are kept when a single event is cleared.
+
 ## Library usage
 
 ```js
@@ -62,6 +74,9 @@ savePlayer(player);
 - `addPlayerToEvent(eventId, playerName)`
 - `getEvents()` / `getEventByName(name)`
 - `getPlayersByEvent(eventName)` / `getRandomPlayerFromEvent(eventName)`
+- `emptyEvent(eventName)` — removes an event's players but keeps the event.
+- `clearEvent(eventName)` — removes an event and its players.
+- `clearDatabase()` — deletes every event and player.
 
 ## Data storage
 
