@@ -15,7 +15,7 @@ function getClient() {
 }
 
 async function scrapePlayer(url, region) {
-  console.log('scrapePlayer ran')
+  // console.log('scrapePlayer ran')
   try {
     const scrapeData = await getClient().scrape.startAndWait({
       url: url,
@@ -51,12 +51,13 @@ node scripts/player-info-scraper.mjs
 */
 
 function getPlayerName(link) {
-  console.log('getPlayerName ran')
-  return link.substring(link.lastIndexOf('/') + 1)
+  let name = link.substring(link.lastIndexOf('/') + 1)
+  console.log(name)
+  return name
 }
 
 function findAgents($) {
-  console.log('findAgents ran')
+  // console.log('findAgents ran')
   const header = $('.mod-agent-rows').first().children().first()
 
   const statCategories = header.text().split('\n').map(ele => ele.trim()).filter(ele => ele !== '')
@@ -87,14 +88,14 @@ function findAgents($) {
 }
 
 function getCurTeam($) {
-  console.log('getCurTeam ran')
+  // console.log('getCurTeam ran')
   const currentTeam = $('h2:contains("Current Teams")').first().next().text().trim()
   const currentTeamName = currentTeam.split('\t').filter(ele => ele.trim() !== '')
   return currentTeamName[0].trim()
 }
 
 function getPastTeam($) {
-    console.log('getPastTeam ran')
+    // console.log('getPastTeam ran')
     const pastTeams = $('h2:contains("Past Teams")').first().next().text().trim()
     const pastTeamNames = pastTeams.split('\t').filter(ele => ele.trim() !== ''
                           && !ele.includes('joined')
@@ -105,18 +106,18 @@ function getPastTeam($) {
 }
 
 function getWinnings($) {
-    console.log('getWinnings ran')
+    // console.log('getWinnings ran')
     const events = $('h2:contains("Event Placements")').first().next()
     const winnings = events.children().first().text().trim()
-    // console.log(winnings.split('\t').map(ele => ele.trim()).filter(ele => ele !== '')[1])
+    // // console.log(winnings.split('\t').map(ele => ele.trim()).filter(ele => ele !== '')[1])
     return winnings.split('\t').map(ele => ele.trim()).filter(ele => ele !== '')[1]
   
 }
 
 function getNationality($) {
-  console.log('getNationality ran')
+  // console.log('getNationality ran')
   const header = $('.flag').first()
-  console.log('flags found:', $('.flag').length);
-  console.log(header.parent().text().trim())
+  // console.log('flags found:', $('.flag').length);
+  // console.log(header.parent().text().trim())
   return header.parent().text().trim()
 }
