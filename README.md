@@ -1,8 +1,7 @@
 # vlr-stats-scraper
 
 Scrapes player stats from [vlr.gg](https://www.vlr.gg) and stores them in a local SQLite
-database, grouped by tournament or stage, so you can pull a backlog of players for a
-specific event or game mode later.
+database, grouped by tournament or stage, so you can pull a backlog of players.
 
 ## Setup
 
