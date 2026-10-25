@@ -1,6 +1,6 @@
 {
   "name": "vlr-stats-scraper",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Scrapes player stats from vlr.gg and stores them in a local SQLite database, grouped by tournament or stage.",
   "homepage": "https://github.com/OverYander/VLR-Webscraper#readme",
   "bugs": {
