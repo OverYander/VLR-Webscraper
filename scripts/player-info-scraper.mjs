@@ -1,8 +1,8 @@
-import * as cheerio from 'cheerio';
+import * as cheerio from 'cheerio'
 import { Hyperbrowser } from "@hyperbrowser/sdk"
-import { config } from "dotenv";
+import { config } from "dotenv"
 
-config();
+config()
 
 let client;
 function getClient() {
@@ -25,15 +25,15 @@ async function scrapePlayer(url, region) {
     })
 
     const $ = cheerio.load(scrapeData.data.html);
-
     const agentsPlayed = findAgents($)
+
     return {
       name: getPlayerName(url),
       team: getCurTeam($),
       past_teams: getPastTeam($),
       winnings: getWinnings($),
       most_played_agents: agentsPlayed.map(data => data.Agent),
-      avg_kda: agentsPlayed.reduce((acc, data) => acc + (parseFloat(data['K:D'])) / agentsPlayed.length, 0),
+      avg_kda: agentsPlayed.reduce((acc, data) => acc + (parseFloat(data['K:D'])) / agentsPlayed.length, 0).toFixed(2),
       nationality: getNationality($),
       region: region,
       stats: agentsPlayed
@@ -44,16 +44,16 @@ async function scrapePlayer(url, region) {
   }
 }
 
-export default scrapePlayer;
-
+// testing
 /*
 node scripts/player-info-scraper.mjs
 */
 
+scrapePlayer("https://www.vlr.gg/player/939/mwzera/?timespan=all", "AMER")
+
+
 function getPlayerName(link) {
-  // Links look like .../player/123/name/?timespan=all, so take the last path segment
   let name = new URL(link).pathname.split('/').filter(ele => ele !== '').pop()
-  console.log(name)
   return name
 }
 
@@ -67,6 +67,7 @@ function findAgents($) {
   const agentStats = header.next().children()
   const agents = agentStats.map((i, el) => {
     el = $(el)
+    // console.log('agent found:', el.children().first().find('img').attr('alt'))?.trim()
     return {
       agent: el.children().first().find('img').attr('alt')?.trim(),
       stats: el.text().split('\t').map(ele => ele.trim()).filter(ele => ele !== '')
@@ -123,3 +124,5 @@ function getNationality($) {
   // console.log(header.parent().text().trim())
   return header.parent().text().trim()
 }
+
+export default scrapePlayer
