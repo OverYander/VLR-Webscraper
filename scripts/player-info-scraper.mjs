@@ -51,7 +51,8 @@ node scripts/player-info-scraper.mjs
 */
 
 function getPlayerName(link) {
-  let name = link.substring(link.lastIndexOf('/') + 1)
+  // Links look like .../player/123/name/?timespan=all, so take the last path segment
+  let name = new URL(link).pathname.split('/').filter(ele => ele !== '').pop()
   console.log(name)
   return name
 }
@@ -67,7 +68,7 @@ function findAgents($) {
   const agents = agentStats.map((i, el) => {
     el = $(el)
     return {
-      agent: el.children().first().html().trim(),
+      agent: el.children().first().find('img').attr('alt')?.trim(),
       stats: el.text().split('\t').map(ele => ele.trim()).filter(ele => ele !== '')
     }
   }).get()
@@ -91,7 +92,8 @@ function getCurTeam($) {
   // console.log('getCurTeam ran')
   const currentTeam = $('h2:contains("Current Teams")').first().next().text().trim()
   const currentTeamName = currentTeam.split('\t').filter(ele => ele.trim() !== '')
-  return currentTeamName[0].trim()
+  // Free agents have no current team
+  return currentTeamName.length ? currentTeamName[0].trim() : null
 }
 
 function getPastTeam($) {

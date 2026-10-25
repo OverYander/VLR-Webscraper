@@ -75,6 +75,11 @@ const eventId = saveEvent({
 
 const links = await scrapeWebsite(link);
 
+if (!links) {
+  console.error(`Couldn't get the player list from ${link}`);
+  process.exit(1);
+}
+
 for (const playerLink of links) {
   const player = await scrapePlayer(playerLink, region);
   if (player) {
