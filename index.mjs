@@ -3,6 +3,7 @@ export { scrapeWebsite } from './scripts/player-link-scraper.mjs';
 export {
   savePlayer,
   getPlayer,
+  searchPlayers,
   getAllPlayers,
   getRandomPlayer,
   saveEvent,

@@ -24,6 +24,7 @@ The package installs a `valstats` command.
 | Command | What it does |
 | --- | --- |
 | `valstats <link> <year> <event-name>` | Scrape every player on an event page and save them under that event |
+| `valstats --player <name \| link>` | Print the stats of every saved player whose name contains `name`, or of one player scraped live from a link |
 | `valstats --clear-event <event-name>` | Remove one event and its players |
 | `valstats --clear` | Wipe the whole database (asks for confirmation) |
 
@@ -54,6 +55,23 @@ What happens:
 Running it again with an event name and year that are already saved replaces that event's
 players with the freshly scraped ones. A player already in the database is updated with the
 new data rather than duplicated.
+
+### Viewing a player's stats
+
+```bash
+npx valstats --player tenz                                    # every saved player with "tenz" in their name
+npx valstats --player ten                                     # partial names work too: tenz, tenten, ...
+npx valstats --player https://www.vlr.gg/player/9/tenz        # scrape a player live
+```
+
+- Passing a **name** searches `players.db` and prints every player whose name contains
+  those characters (case-insensitive). Names are the ones from the vlr.gg profile URL,
+  e.g. `tenz`. Nothing is scraped.
+- Passing a **vlr.gg player link** scrapes that profile live using the all-time timespan.
+  The result is printed but not saved to the database.
+
+For each player, their team, past teams, nationality, region, winnings, top agents and
+average K:D are printed, followed by a table of their stats on their top 3 agents.
 
 ### Clearing data
 
@@ -127,6 +145,7 @@ const pick = getRandomPlayerFromEvent('Stage 2');
 | --- | --- | --- |
 | `savePlayer(player)` | — | Inserts a player, or updates them if one with the same name exists. |
 | `getPlayer(name)` | `Player \| null` | Looks up a player by name. |
+| `searchPlayers(query)` | `Player[]` | Every player whose name contains `query` (case-insensitive), sorted by name. |
 | `getAllPlayers()` | `Player[]` | Every player in the database. |
 | `getRandomPlayer()` | `Player \| null` | A random player from the whole database. |
 

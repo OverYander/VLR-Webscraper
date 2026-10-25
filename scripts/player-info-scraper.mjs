@@ -47,9 +47,8 @@ async function scrapePlayer(url, region) {
 // testing
 /*
 node scripts/player-info-scraper.mjs
-*/
-
 scrapePlayer("https://www.vlr.gg/player/939/mwzera/?timespan=all", "AMER")
+*/
 
 
 function getPlayerName(link) {

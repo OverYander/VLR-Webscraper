@@ -1,7 +1,7 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import Database from 'better-sqlite3'
+import path from 'path'
 
-const db = new Database(path.join(process.cwd(), 'players.db'));
+const db = new Database(path.join(process.cwd(), 'players.db'))
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS players (
@@ -15,20 +15,20 @@ db.exec(`
     region TEXT,
     stats TEXT
   )
-`);
+`)
 
-const existingPlayerColumns = db.prepare('PRAGMA table_info(players)').all().map(col => col.name);
+const existingPlayerColumns = db.prepare('PRAGMA table_info(players)').all().map(col => col.name)
 if (!existingPlayerColumns.includes('stats')) {
-  db.exec('ALTER TABLE players ADD COLUMN stats TEXT');
+  db.exec('ALTER TABLE players ADD COLUMN stats TEXT')
 }
 
-const existingTableNames = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name);
+const existingTableNames = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name)
 if (existingTableNames.includes('tournaments') && !existingTableNames.includes('events')) {
-  db.exec('ALTER TABLE tournaments RENAME TO events');
+  db.exec('ALTER TABLE tournaments RENAME TO events')
 }
 if (existingTableNames.includes('tournament_players') && !existingTableNames.includes('event_players')) {
-  db.exec('ALTER TABLE tournament_players RENAME TO event_players');
-  db.exec('ALTER TABLE event_players RENAME COLUMN tournament_id TO event_id');
+  db.exec('ALTER TABLE tournament_players RENAME TO event_players')
+  db.exec('ALTER TABLE event_players RENAME COLUMN tournament_id TO event_id')
 }
 
 db.exec(`
@@ -40,14 +40,14 @@ db.exec(`
     year INTEGER,
     stage INTEGER
   )
-`);
+`)
 
-const existingEventColumns = db.prepare('PRAGMA table_info(events)').all().map(col => col.name);
+const existingEventColumns = db.prepare('PRAGMA table_info(events)').all().map(col => col.name)
 if (!existingEventColumns.includes('year')) {
-  db.exec('ALTER TABLE events ADD COLUMN year INTEGER');
+  db.exec('ALTER TABLE events ADD COLUMN year INTEGER')
 }
 if (!existingEventColumns.includes('stage')) {
-  db.exec('ALTER TABLE events ADD COLUMN stage INTEGER');
+  db.exec('ALTER TABLE events ADD COLUMN stage INTEGER')
 }
 
 db.exec(`
@@ -56,7 +56,7 @@ db.exec(`
     player_name TEXT NOT NULL REFERENCES players(name),
     PRIMARY KEY (event_id, player_name)
   )
-`);
+`)
 
 const upsertPlayerStmt = db.prepare(`
   INSERT INTO players (name, team, past_teams, winnings, most_played_agents, avg_kda, nationality, region, stats)
@@ -70,7 +70,7 @@ const upsertPlayerStmt = db.prepare(`
     nationality = excluded.nationality,
     region = excluded.region,
     stats = excluded.stats
-`);
+`)
 
 const upsertEventStmt = db.prepare(`
   INSERT INTO events (name, url, region, year, stage)
@@ -80,21 +80,21 @@ const upsertEventStmt = db.prepare(`
     region = excluded.region,
     year = excluded.year,
     stage = excluded.stage
-`);
+`)
 
 const linkPlayerToEventStmt = db.prepare(`
   INSERT OR IGNORE INTO event_players (event_id, player_name)
   VALUES (@eventId, @playerName)
-`);
+`)
 
 function rowToPlayer(row) {
-  if (!row) return null;
+  if (!row) return null
   return {
     ...row,
     past_teams: JSON.parse(row.past_teams),
     most_played_agents: JSON.parse(row.most_played_agents),
     stats: JSON.parse(row.stats),
-  };
+  }
 }
 
 function savePlayer(player) {
@@ -103,19 +103,26 @@ function savePlayer(player) {
     past_teams: JSON.stringify(player.past_teams),
     most_played_agents: JSON.stringify(player.most_played_agents),
     stats: JSON.stringify(player.stats),
-  });
+  })
 }
 
 function getPlayer(name) {
-  return rowToPlayer(db.prepare('SELECT * FROM players WHERE name = ?').get(name));
+  return rowToPlayer(db.prepare('SELECT * FROM players WHERE name = ?').get(name))
+}
+
+// Case-insensitive partial match, e.g. "ten" finds "tenz" and "tenten".
+function searchPlayers(query) {
+  return db.prepare("SELECT * FROM players WHERE name LIKE ? ESCAPE '\\' ORDER BY name")
+    .all(`%${query.replace(/[\\%_]/g, '\\$&')}%`)
+    .map(rowToPlayer)
 }
 
 function getAllPlayers() {
-  return db.prepare('SELECT * FROM players').all().map(rowToPlayer);
+  return db.prepare('SELECT * FROM players').all().map(rowToPlayer)
 }
 
 function getRandomPlayer() {
-  return rowToPlayer(db.prepare('SELECT * FROM players ORDER BY RANDOM() LIMIT 1').get());
+  return rowToPlayer(db.prepare('SELECT * FROM players ORDER BY RANDOM() LIMIT 1').get())
 }
 
 // Creates the event (tournament, stage, etc.) if it doesn't exist yet, and returns its id either way.
@@ -126,20 +133,20 @@ function saveEvent({ name, url, region, year, stage }) {
     region: region ?? null,
     year: year ?? null,
     stage: stage ?? null,
-  });
-  return db.prepare('SELECT id FROM events WHERE name = ?').get(name).id;
+  })
+  return db.prepare('SELECT id FROM events WHERE name = ?').get(name).id
 }
 
 function addPlayerToEvent(eventId, playerName) {
-  linkPlayerToEventStmt.run({ eventId, playerName });
+  linkPlayerToEventStmt.run({ eventId, playerName })
 }
 
 function getEvents() {
-  return db.prepare('SELECT * FROM events').all();
+  return db.prepare('SELECT * FROM events').all()
 }
 
 function getEventByName(name) {
-  return db.prepare('SELECT * FROM events WHERE name = ?').get(name);
+  return db.prepare('SELECT * FROM events WHERE name = ?').get(name)
 }
 
 function getPlayersByEvent(eventName) {
@@ -148,7 +155,7 @@ function getPlayersByEvent(eventName) {
     JOIN event_players ON event_players.player_name = players.name
     JOIN events ON events.id = event_players.event_id
     WHERE events.name = ?
-  `).all(eventName).map(rowToPlayer);
+  `).all(eventName).map(rowToPlayer)
 }
 
 function getRandomPlayerFromEvent(eventName) {
@@ -158,39 +165,40 @@ function getRandomPlayerFromEvent(eventName) {
     JOIN events ON events.id = event_players.event_id
     WHERE events.name = ?
     ORDER BY RANDOM() LIMIT 1
-  `).get(eventName));
+  `).get(eventName))
 }
 
 // Deletes players that no longer belong to any event.
 function deleteOrphanedPlayers() {
-  db.prepare('DELETE FROM players WHERE name NOT IN (SELECT player_name FROM event_players)').run();
+  db.prepare('DELETE FROM players WHERE name NOT IN (SELECT player_name FROM event_players)').run()
 }
 
 // Removes every player from an event but keeps the event itself, so it can be re-scraped.
 // Players that are still in other events are kept.
 const emptyEvent = db.transaction((eventName) => {
-  const event = getEventByName(eventName);
-  if (!event) return false;
-  db.prepare('DELETE FROM event_players WHERE event_id = ?').run(event.id);
-  deleteOrphanedPlayers();
-  return true;
-});
+  const event = getEventByName(eventName)
+  if (!event) return false
+  db.prepare('DELETE FROM event_players WHERE event_id = ?').run(event.id)
+  deleteOrphanedPlayers()
+  return true
+})
 
 // Removes an event and its players. Players that are still in other events are kept.
 const clearEvent = db.transaction((eventName) => {
-  if (!emptyEvent(eventName)) return false;
-  db.prepare('DELETE FROM events WHERE name = ?').run(eventName);
-  return true;
-});
+  if (!emptyEvent(eventName)) return false
+  db.prepare('DELETE FROM events WHERE name = ?').run(eventName)
+  return true
+})
 
 // Wipes every event and player from the database.
 const clearDatabase = db.transaction(() => {
-  db.exec('DELETE FROM event_players; DELETE FROM events; DELETE FROM players;');
-});
+  db.exec('DELETE FROM event_players DELETE FROM events DELETE FROM players')
+})
 
 export {
   savePlayer,
   getPlayer,
+  searchPlayers,
   getAllPlayers,
   getRandomPlayer,
   saveEvent,
@@ -202,4 +210,4 @@ export {
   emptyEvent,
   clearEvent,
   clearDatabase,
-};
+}
